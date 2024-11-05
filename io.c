@@ -11,6 +11,15 @@ void gotoxy(POSITION pos) {
 void set_color(int color) {
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
 }
+enum ColorType {
+	BLACK = 0,
+	RED = 12,
+	BLUE = 9,
+	GRAY = 7,
+	YELLO = 14,
+	DARKYELLO = 6
+} COLOR;
+
 
 void printc(POSITION pos, char ch, int color) {
 	if (color >= 0) {
