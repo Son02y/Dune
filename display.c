@@ -11,6 +11,9 @@
 // 출력할 내용들의 좌상단(topleft) 좌표
 const POSITION resource_pos = { 0, 0 };
 const POSITION map_pos = { 1, 0 };
+const POSITION status_pos = { 1, 62 };
+const POSITION message_pos = { 20,62 };
+const POSITION command_pos = { 20,62 };
 
 
 char backbuf[MAP_HEIGHT][MAP_WIDTH] = { 0 };
@@ -84,3 +87,15 @@ void display_cursor(CURSOR cursor) {
 	printc(padd(map_pos, curr), ch, COLOR_CURSOR);
 }
 
+void display_system_mseeage() {
+	gotoxy(message_pos);
+	printf("");
+}
+
+void display_commands() {
+	gotoxy(command_pos);
+}
+
+void display_status() {
+	gotoxy(status_pos);
+}
