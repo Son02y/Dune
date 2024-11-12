@@ -20,7 +20,8 @@
 void display(
 	RESOURCE resource,
 	char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
-	CURSOR cursor
+	CURSOR cursor,
+	char info[N_LAYER][INFO_HEIGHT][INFO_WIDTH]
 );
 
 #endif

@@ -28,7 +28,8 @@ void display_cursor(CURSOR cursor);
 void display(
 	RESOURCE resource,
 	char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
-	CURSOR cursor)
+	CURSOR cursor,
+	char info[N_LAYER][INFO_HEIGHT][INFO_WIDTH])
 {
 	display_resource(resource);
 	display_map(map);
@@ -52,6 +53,17 @@ void display_resource(RESOURCE resource) {
 void project(char src[N_LAYER][MAP_HEIGHT][MAP_WIDTH], char dest[MAP_HEIGHT][MAP_WIDTH]) {
 	for (int i = 0; i < MAP_HEIGHT; i++) {
 		for (int j = 0; j < MAP_WIDTH; j++) {
+			for (int k = 0; k < N_LAYER; k++) {
+				if (src[k][i][j] >= 0) {
+					dest[i][j] = src[k][i][j];
+				}
+			}
+		}
+	}
+}
+void project2(char src[N_LAYER][INFO_HEIGHT][INFO_WIDTH], char dest[INFO_HEIGHT][INFO_WIDTH]) {
+	for (int i = 0; i < INFO_HEIGHT; i++) {
+		for (int j = 62; j < INFO_WIDTH; j++) {
 			for (int k = 0; k < N_LAYER; k++) {
 				if (src[k][i][j] >= 0) {
 					dest[i][j] = src[k][i][j];
@@ -87,9 +99,17 @@ void display_cursor(CURSOR cursor) {
 	printc(padd(map_pos, curr), ch, COLOR_CURSOR);
 }
 
-void display_system_mseeage() {
-	gotoxy(message_pos);
-	printf("");
+void display_system_mseeage(char info[N_LAYER][INFO_HEIGHT][INFO_WIDTH]) {
+	project2(info, backbuf);
+	for (int i = 0; i < MAP_HEIGHT; i++) {
+		for (int j = 62; j < MAP_WIDTH; j++) {
+			if (frontbuf[i][j] != backbuf[i][j]) {
+				POSITION pos = { i, j };
+				printc(padd(map_pos, pos), backbuf[i][j], COLOR_DEFAULT);
+			}
+			frontbuf[i][j] = backbuf[i][j];
+		}
+	}
 }
 
 void display_commands() {
