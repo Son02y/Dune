@@ -1,18 +1,18 @@
 /*
 *  display.c:
-* È­¸é¿¡ °ÔÀÓ Á¤º¸¸¦ Ãâ·Â
-* ¸Ê, Ä¿¼­, ½Ã½ºÅÛ ¸Ş½ÃÁö, Á¤º¸Ã¢, ÀÚ¿ø »óÅÂ µîµî
-* io.c¿¡ ÀÖ´Â ÇÔ¼öµéÀ» »ç¿ëÇÔ
+* í™”ë©´ì— ê²Œì„ ì •ë³´ë¥¼ ì¶œë ¥
+* ë§µ, ì»¤ì„œ, ì‹œìŠ¤í…œ ë©”ì‹œì§€, ì •ë³´ì°½, ìì› ìƒíƒœ ë“±ë“±
+* io.cì— ìˆëŠ” í•¨ìˆ˜ë“¤ì„ ì‚¬ìš©í•¨
 */
 
 #include "display.h"
 #include "io.h"
 
-// Ãâ·ÂÇÒ ³»¿ëµéÀÇ ÁÂ»ó´Ü(topleft) ÁÂÇ¥
+// ì¶œë ¥í•  ë‚´ìš©ë“¤ì˜ ì¢Œìƒë‹¨(topleft) ì¢Œí‘œ
 const POSITION resource_pos = { 0, 0 };
 const POSITION map_pos = { 1, 0 };
 const POSITION status_pos = { 1, 62 };
-const POSITION message_pos = { 20,62 };
+const POSITION message_pos = { 20,0 };
 const POSITION command_pos = { 20,62 };
 
 
@@ -23,18 +23,20 @@ void project(char src[N_LAYER][MAP_HEIGHT][MAP_WIDTH], char dest[MAP_HEIGHT][MAP
 void display_resource(RESOURCE resource);
 void display_map(char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH]);
 void display_cursor(CURSOR cursor);
+void display_statue(char statue[N_LAYER][STATUE_HEIGHT][STATUE_WIDTH]);
 
 
 void display(
 	RESOURCE resource,
 	char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH],
 	CURSOR cursor,
-	char info[N_LAYER][INFO_HEIGHT][INFO_WIDTH])
+	char statue[N_LAYER][STATUE_HEIGHT][STATUE_WIDTH])
 {
 	display_resource(resource);
 	display_map(map);
+	display_statue(statue);
 	display_cursor(cursor);
-	// display_system_message()
+	
 	// display_object_info()
 	// display_commands()
 	// ...
@@ -61,9 +63,9 @@ void project(char src[N_LAYER][MAP_HEIGHT][MAP_WIDTH], char dest[MAP_HEIGHT][MAP
 		}
 	}
 }
-void project2(char src[N_LAYER][INFO_HEIGHT][INFO_WIDTH], char dest[INFO_HEIGHT][INFO_WIDTH]) {
-	for (int i = 0; i < INFO_HEIGHT; i++) {
-		for (int j = 62; j < INFO_WIDTH; j++) {
+void project2(char src[N_LAYER][STATUE_HEIGHT][STATUE_WIDTH], char dest[STATUE_HEIGHT][STATUE_WIDTH]) {
+	for (int i = 0; i < STATUE_HEIGHT; i++) {
+		for (int j = 62; j < STATUE_WIDTH; j++) {
 			for (int k = 0; k < N_LAYER; k++) {
 				if (src[k][i][j] >= 0) {
 					dest[i][j] = src[k][i][j];
@@ -86,8 +88,21 @@ void display_map(char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH]) {
 		}
 	}
 }
+void display_statue(char statue[N_LAYER][STATUE_HEIGHT][STATUE_WIDTH]) {
+	project2(statue, backbuf);
 
-// frontbuf[][]¿¡¼­ Ä¿¼­ À§Ä¡ÀÇ ¹®ÀÚ¸¦ »ö¸¸ ¹Ù²ã¼­ ±×´ë·Î ´Ù½Ã Ãâ·Â
+	for (int i = 0; i < STATUE_HEIGHT; i++) {
+		for (int j = 62; j < STATUE_WIDTH; j++) {
+			if (frontbuf[i][j] != backbuf[i][j]) {
+				POSITION pos = { i, j };
+				printc(padd(status_pos, pos), backbuf[i][j], COLOR_DEFAULT);
+			}
+			frontbuf[i][j] = backbuf[i][j];
+		}
+	}
+}
+
+// frontbuf[][]ì—ì„œ ì»¤ì„œ ìœ„ì¹˜ì˜ ë¬¸ìë¥¼ ìƒ‰ë§Œ ë°”ê¿”ì„œ ê·¸ëŒ€ë¡œ ë‹¤ì‹œ ì¶œë ¥
 void display_cursor(CURSOR cursor) {
 	POSITION prev = cursor.previous;
 	POSITION curr = cursor.current;
@@ -99,19 +114,6 @@ void display_cursor(CURSOR cursor) {
 	printc(padd(map_pos, curr), ch, COLOR_CURSOR);
 }
 
-void display_system_mseeage(char info[N_LAYER][INFO_HEIGHT][INFO_WIDTH]) {
-	project2(info, backbuf);
-	for (int i = 0; i < MAP_HEIGHT; i++) {
-		for (int j = 62; j < MAP_WIDTH; j++) {
-			if (frontbuf[i][j] != backbuf[i][j]) {
-				POSITION pos = { i, j };
-				printc(padd(map_pos, pos), backbuf[i][j], COLOR_DEFAULT);
-			}
-			frontbuf[i][j] = backbuf[i][j];
-		}
-	}
-}
-
 void display_commands() {
 	gotoxy(command_pos);
 }
@@ -119,3 +121,4 @@ void display_commands() {
 void display_status() {
 	gotoxy(status_pos);
 }
+
