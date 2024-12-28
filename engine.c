@@ -6,11 +6,14 @@
 #include "display.h"
 
 void init(void);
+void init_2(void);
 void intro(void);
 void outro(void);
 void cursor_move(DIRECTION dir);
 void sample_obj_move(void);
 POSITION sample_obj_next_position(void);
+
+POSITION statue_start = { 1, 62 };
 
 
 /* ================= control =================== */
@@ -20,8 +23,7 @@ CURSOR cursor = { { 1, 1 }, {1, 1} };
 
 /* ================= game data =================== */
 char map[N_LAYER][MAP_HEIGHT][MAP_WIDTH] = { 0 };
-
-char info[N_LAYER][INFO_HEIGHT][INFO_WIDTH] = { 0 };
+char statue[N_LAYER][STATUE_HEIGHT][STATUE_WIDTH] = { 0 };
 
 RESOURCE resource = {
 	.spice = 0,
@@ -44,19 +46,20 @@ int main(void) {
 
 	init();
 	intro();
-	display(resource, map, cursor,info);
-	
+	gotoxy(statue_start);
+	init_2();
+	display(resource, map, cursor, statue);
 
 	while (1) {
-		// loop µ¹ ¶§¸¶´Ù(Áï, TICK==10ms¸¶´Ù) Å° ÀÔ·Â È®ÀÎ
+		// loop ëŒ ë•Œë§ˆë‹¤(ì¦‰, TICK==10msë§ˆë‹¤) í‚¤ ì…ë ¥ í™•ì¸
 		KEY key = get_key();
 
-		// Å° ÀÔ·ÂÀÌ ÀÖÀ¸¸é Ã³¸®
+		// í‚¤ ì…ë ¥ì´ ìˆìœ¼ë©´ ì²˜ë¦¬
 		if (is_arrow_key(key)) {
 			cursor_move(ktod(key));
 		}
 		else {
-			// ¹æÇâÅ° ¿ÜÀÇ ÀÔ·Â
+			// ë°©í–¥í‚¤ ì™¸ì˜ ì…ë ¥
 			switch (key) {
 			case k_quit: outro();
 			case k_none:
@@ -65,11 +68,11 @@ int main(void) {
 			}
 		}
 
-		// »ùÇÃ ¿ÀºêÁ§Æ® µ¿ÀÛ
+		// ìƒ˜í”Œ ì˜¤ë¸Œì íŠ¸ ë™ì‘
 		sample_obj_move();
 
-		// È­¸é Ãâ·Â
-		display(resource, map, cursor,info);
+		// í™”ë©´ ì¶œë ¥
+		display(resource, map, cursor, statue);
 		Sleep(TICK);
 		sys_clock += 10;
 	}
@@ -88,7 +91,7 @@ void outro(void) {
 }
 
 void init(void) {
-	// layer 0(map[0])¿¡ ÁöÇü »ı¼º
+	// layer 0(map[0])ì— ì§€í˜• ìƒì„±
 	for (int j = 0; j < MAP_WIDTH; j++) {
 		map[0][0][j] = '#';
 		map[0][MAP_HEIGHT - 1][j] = '#';
@@ -102,18 +105,38 @@ void init(void) {
 		}
 	}
 
-	// layer 1(map[1])Àº ºñ¿ö µÎ±â(-1·Î Ã¤¿ò)
+	// layer 1(map[1])ì€ ë¹„ì›Œ ë‘ê¸°(-1ë¡œ ì±„ì›€)
 	for (int i = 0; i < MAP_HEIGHT; i++) {
 		for (int j = 0; j < MAP_WIDTH; j++) {
 			map[1][i][j] = -1;
 		}
 	}
-
 	// object sample
 	map[1][obj.pos.row][obj.pos.column] = 'o';
 }
+void init_2(void) {
+	for (int j = 62; j < STATUE_WIDTH; j++) {
+		statue[0][0][j] = '#';
+		statue[0][STATUE_HEIGHT - 1][j] = '#';
+	}
 
-// (°¡´ÉÇÏ´Ù¸é) ÁöÁ¤ÇÑ ¹æÇâÀ¸·Î Ä¿¼­ ÀÌµ¿
+	for (int i = 1; i < STATUE_HEIGHT - 1; i++) {
+		statue[0][i][0] = '#';
+		statue[0][i][STATUE_WIDTH - 1] = '#';
+		for (int j = 1; j < STATUE_WIDTH - 1; j++) {
+			statue[0][i][j] = ' ';
+		}
+	}
+
+	// layer 1(map[1])ì€ ë¹„ì›Œ ë‘ê¸°(-1ë¡œ ì±„ì›€)
+	for (int i = 0; i < STATUE_HEIGHT; i++) {
+		for (int j = 0; j < STATUE_WIDTH; j++) {
+			statue[1][i][j] = -1;
+		}
+	}
+}
+
+// (ê°€ëŠ¥í•˜ë‹¤ë©´) ì§€ì •í•œ ë°©í–¥ìœ¼ë¡œ ì»¤ì„œ ì´ë™
 void cursor_move(DIRECTION dir) {
 	POSITION curr = cursor.current;
 	POSITION new_pos = pmove(curr, dir);
@@ -129,26 +152,26 @@ void cursor_move(DIRECTION dir) {
 
 /* ================= sample object movement =================== */
 POSITION sample_obj_next_position(void) {
-	// ÇöÀç À§Ä¡¿Í ¸ñÀûÁö¸¦ ºñ±³ÇØ¼­ ÀÌµ¿ ¹æÇâ °áÁ¤	
+	// í˜„ì¬ ìœ„ì¹˜ì™€ ëª©ì ì§€ë¥¼ ë¹„êµí•´ì„œ ì´ë™ ë°©í–¥ ê²°ì •	
 	POSITION diff = psub(obj.dest, obj.pos);
 	DIRECTION dir;
 
-	// ¸ñÀûÁö µµÂø. Áö±İÀº ´Ü¼øÈ÷ ¿ø·¡ ÀÚ¸®·Î ¿Õº¹
+	// ëª©ì ì§€ ë„ì°©. ì§€ê¸ˆì€ ë‹¨ìˆœíˆ ì›ë˜ ìë¦¬ë¡œ ì™•ë³µ
 	if (diff.row == 0 && diff.column == 0) {
 		if (obj.dest.row == 1 && obj.dest.column == 1) {
-			// topleft --> bottomright·Î ¸ñÀûÁö ¼³Á¤
+			// topleft --> bottomrightë¡œ ëª©ì ì§€ ì„¤ì •
 			POSITION new_dest = { MAP_HEIGHT - 2, MAP_WIDTH - 2 };
 			obj.dest = new_dest;
 		}
 		else {
-			// bottomright --> topleft·Î ¸ñÀûÁö ¼³Á¤
+			// bottomright --> topleftë¡œ ëª©ì ì§€ ì„¤ì •
 			POSITION new_dest = { 1, 1 };
 			obj.dest = new_dest;
 		}
 		return obj.pos;
 	}
 
-	// °¡·ÎÃà, ¼¼·ÎÃà °Å¸®¸¦ ºñ±³ÇØ¼­ ´õ ¸Õ ÂÊ ÃàÀ¸·Î ÀÌµ¿
+	// ê°€ë¡œì¶•, ì„¸ë¡œì¶• ê±°ë¦¬ë¥¼ ë¹„êµí•´ì„œ ë” ë¨¼ ìª½ ì¶•ìœ¼ë¡œ ì´ë™
 	if (abs(diff.row) >= abs(diff.column)) {
 		dir = (diff.row >= 0) ? d_down : d_up;
 	}
@@ -157,8 +180,8 @@ POSITION sample_obj_next_position(void) {
 	}
 
 	// validation check
-	// next_pos°¡ ¸ÊÀ» ¹ş¾î³ªÁö ¾Ê°í, (Áö±İÀº ¾øÁö¸¸)Àå¾Ö¹°¿¡ ºÎµúÈ÷Áö ¾ÊÀ¸¸é ´ÙÀ½ À§Ä¡·Î ÀÌµ¿
-	// Áö±İÀº Ãæµ¹ ½Ã ¾Æ¹«°Íµµ ¾È ÇÏ´Âµ¥, ³ªÁß¿¡´Â Àå¾Ö¹°À» ÇÇÇØ°¡°Å³ª Àû°ú ÀüÅõ¸¦ ÇÏ°Å³ª... µîµî
+	// next_posê°€ ë§µì„ ë²—ì–´ë‚˜ì§€ ì•Šê³ , (ì§€ê¸ˆì€ ì—†ì§€ë§Œ)ì¥ì• ë¬¼ì— ë¶€ë”ªíˆì§€ ì•Šìœ¼ë©´ ë‹¤ìŒ ìœ„ì¹˜ë¡œ ì´ë™
+	// ì§€ê¸ˆì€ ì¶©ëŒ ì‹œ ì•„ë¬´ê²ƒë„ ì•ˆ í•˜ëŠ”ë°, ë‚˜ì¤‘ì—ëŠ” ì¥ì• ë¬¼ì„ í”¼í•´ê°€ê±°ë‚˜ ì ê³¼ ì „íˆ¬ë¥¼ í•˜ê±°ë‚˜... ë“±ë“±
 	POSITION next_pos = pmove(obj.pos, dir);
 	if (1 <= next_pos.row && next_pos.row <= MAP_HEIGHT - 2 && \
 		1 <= next_pos.column && next_pos.column <= MAP_WIDTH - 2 && \
@@ -167,17 +190,17 @@ POSITION sample_obj_next_position(void) {
 		return next_pos;
 	}
 	else {
-		return obj.pos;  // Á¦ÀÚ¸®
+		return obj.pos;  // ì œìë¦¬
 	}
 }
 
 void sample_obj_move(void) {
 	if (sys_clock <= obj.next_move_time) {
-		// ¾ÆÁ÷ ½Ã°£ÀÌ ¾È µÆÀ½
+		// ì•„ì§ ì‹œê°„ì´ ì•ˆ ëìŒ
 		return;
 	}
 
-	// ¿ÀºêÁ§Æ®(°Ç¹°, À¯´Ö µî)Àº layer1(map[1])¿¡ ÀúÀå
+	// ì˜¤ë¸Œì íŠ¸(ê±´ë¬¼, ìœ ë‹› ë“±)ì€ layer1(map[1])ì— ì €ì¥
 	map[1][obj.pos.row][obj.pos.column] = -1;
 	obj.pos = sample_obj_next_position();
 	map[1][obj.pos.row][obj.pos.column] = obj.repr;
